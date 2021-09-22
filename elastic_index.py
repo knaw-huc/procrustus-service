@@ -39,7 +39,6 @@ class Index:
         return ret_array
 
     def browse(self, page):
-        ret_array = []
         int_page = int(page)
         start = (int_page -1) * 20
         response = self.client.search(
@@ -48,14 +47,15 @@ class Index:
                 "match_all": {}},
                 "size": 20,
                 "from": start,
-                "_source": ["xml", "title", "location", "shelfmark", "itemTitle", "origPlace", "origDate"],
+                "_source": ["xml", "title", "origPlace", "origDate"],
                 "sort": [
-                    { "itemTitle.keyword": {"order":"asc"}}
+                    { "title.keyword": {"order":"asc"}}
                 ]
             }
         )
+        ret_array = {"amount" : response["hits"]["total"]["value"], "items": []}
         for item in response["hits"]["hits"]:
-            ret_array.append(item["_source"])
+            ret_array["items"].append(item["_source"])
         return ret_array
 
 
