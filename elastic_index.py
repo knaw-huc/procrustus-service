@@ -1,4 +1,5 @@
 from elasticsearch import Elasticsearch
+import math
 
 class Index:
     def __init__(self, config):
@@ -38,22 +39,47 @@ class Index:
             ret_array.append(buffer)
         return ret_array
 
-    def browse(self, page):
+    def browse(self, page, length, orderFieldName, searchvalues):
         int_page = int(page)
-        start = (int_page -1) * 20
-        response = self.client.search(
-            index="manuscripts",
-            body={ "query": {
-                "match_all": {}},
-                "size": 20,
-                "from": start,
-                "_source": ["xml", "title", "origPlace", "origDate"],
-                "sort": [
-                    { "title.keyword": {"order":"asc"}}
-                ]
-            }
-        )
-        ret_array = {"amount" : response["hits"]["total"]["value"], "items": []}
+        start = (int_page -1) * length
+        matches = []
+
+        if searchvalues == "none":
+            response = self.client.search(
+                index="manuscripts",
+                body={ "query": {
+                    "match_all": {}},
+                    "size": length,
+                    "from": start,
+                    "_source": ["xml", "title", "origPlace", "origDate"],
+                    "sort": [
+                        { orderFieldName: {"order":"asc"}}
+                    ]
+                }
+            )
+        else:
+            for item in searchvalues:
+                for value in item["values"]:
+                    if item["field"] == "FREE_TEXT":
+                        matches.append({"multi_match": {"query": value, "fields": ["fulltext"]}})
+                    else:
+                        matches.append({"match": {item["field"] + ".keyword": value}})
+            response = self.client.search(
+                index="manuscripts",
+                body={ "query": {
+                    "bool": {
+                        "must": matches
+                    }},
+                    "size": length,
+                    "from": start,
+                    "_source": ["xml", "title", "origPlace", "origDate"],
+                    "sort": [
+                        { orderFieldName: {"order":"asc"}}
+                    ]
+                }
+            )
+
+        ret_array = {"amount" : response["hits"]["total"]["value"], "pages": math.ceil(response["hits"]["total"]["value"] / length) ,"items": []}
         for item in response["hits"]["hits"]:
             ret_array["items"].append(item["_source"])
         return ret_array

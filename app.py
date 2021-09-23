@@ -33,10 +33,11 @@ def get_facet():
     retStruc = index.get_facet(facet + ".keyword", amount)
     return json.dumps(retStruc)
 
-@app.route("/browse", methods=['GET'])
+@app.route("/browse", methods=['POST'])
 def browse():
-    page = request.args.get("page")
-    retStruc = index.browse(page)
+    struc = request.get_json()
+    print(struc)
+    retStruc = index.browse(struc["page"], struc["page_length"], struc["sortorder"] + ".keyword", struc["searchvalues"])
     return json.dumps(retStruc)
 
 #Start main program
