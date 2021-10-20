@@ -1,6 +1,7 @@
 from flask import Flask, request
 import json
 from elastic_index import Index
+from store import Store
 
 
 app = Flask(__name__)
@@ -18,6 +19,7 @@ index = Index(config)
 def after_request(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Headers'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
     response.headers['Content-type'] = 'application/json'
     return response
 
@@ -30,15 +32,27 @@ def hello_world():
 def get_facet():
     facet = request.args.get("name")
     amount = request.args.get("amount")
-    retStruc = index.get_facet(facet + ".keyword", amount)
-    return json.dumps(retStruc)
+    ret_struc = index.get_facet(facet + ".keyword", amount)
+    return json.dumps(ret_struc)
+
+@app.route("/filter-facet", methods=['GET'])
+def get_filter_facet():
+    facet = request.args.get("name")
+    amount = request.args.get("amount")
+    facet_filter = request.args.get("filter")
+    ret_struc = index.get_filter_facet(facet + ".keyword", amount, facet_filter)
+    return json.dumps(ret_struc)
 
 @app.route("/browse", methods=['POST'])
 def browse():
     struc = request.get_json()
-    print(struc)
-    retStruc = index.browse(struc["page"], struc["page_length"], struc["sortorder"] + ".keyword", struc["searchvalues"])
-    return json.dumps(retStruc)
+    ret_struc = index.browse(struc["page"], struc["page_length"], struc["sortorder"] + ".keyword", struc["searchvalues"], struc["index"])
+    return json.dumps(ret_struc)
+
+@app.route("/get_store")
+def get_store():
+    store = Store()
+    return store.get_data()
 
 #Start main program
 
