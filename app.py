@@ -2,6 +2,7 @@ from flask import Flask, request
 import json
 from elastic_index import Index
 from store import Store
+from handlers import timbuctoo
 
 
 app = Flask(__name__)
@@ -13,6 +14,7 @@ config = {
 }
 
 index = Index(config)
+tb = timbuctoo.Timbuctoo_handler()
 
 
 @app.after_request
@@ -53,6 +55,19 @@ def browse():
 def get_store():
     store = Store()
     return store.get_data()
+
+@app.route("/get_entities/<ds>", methods=["GET"])
+def get_entities(ds):
+    result = tb.get_colls(ds)
+    query = {"query": result}
+    return json.dumps(result)
+
+@app.route("/get_collection_properties/<ds>/<coll>")
+def get_properties(ds, coll):
+    result = tb.get_props(ds, coll)
+    return json.dumps(result)
+
+
 
 #Start main program
 
