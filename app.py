@@ -67,6 +67,11 @@ def get_properties(ds, coll):
     result = tb.get_props(ds, coll)
     return json.dumps(result)
 
+@app.route("/get_item", methods=["POST"])
+def get_item():
+    params = request.get_json()
+    result = tb.get_item(params["dataset"], params["collection"], params["uri"])
+    return json.dumps(result)
 
 
 #Start main program
