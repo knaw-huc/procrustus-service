@@ -81,8 +81,6 @@ class Timbuctoo_handler:
                 values.append(self.get_value(data))
                 return {"notion": field, "values": values}
 
-        return {"notion": "not defined", "values": []}
-
 
     def model_results(self, dataset, collection, result):
         items = []
@@ -94,5 +92,6 @@ class Timbuctoo_handler:
         query = self.build_query(dataset, collection, uri)
         result = self.fetch_data(query)
         return self.model_results(dataset, collection, result)
+        #return json.dumps({"query": query})
 
 
