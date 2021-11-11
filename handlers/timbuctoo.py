@@ -40,13 +40,16 @@ class Timbuctoo_handler:
                 return self.tf.entity(item["name"])
             else:
                 if item["isValueType"]:
-                    return self.tf.default_value(item["name"])
+                    if len(item["referencedCollections"]["items"]) == 1:
+                        return self.tf.entity(item["name"])
+                    else:
+                        return self.tf.default_value(item["name"])
                 else:
                     return self.tf.uri_title_value(item["name"])
 
 
     def value_extractor(self, props):
-        subquery = ""
+        subquery = "title {value} "
         for item in props["data"]["dataSetMetadata"]["collection"]["properties"]["items"]:
             subquery = subquery + self.create_field_query(item)
         return subquery
@@ -64,22 +67,29 @@ class Timbuctoo_handler:
         else:
             return item["value"]
 
+    def humanify_notion(self, field):
+        ret_value = field.replace("_inverse_", "")
+        ret_value = ret_value.replace("List", "")
+        ret_value = ret_value.replace("schema_", "")
+        return ret_value
+
     def put_list_values(self, field, data):
         values = []
         for item in data["items"]:
             values.append(self.get_value(item))
-        return {"notion": field, "values": values}
+        return {"notion": field, "label": self.humanify_notion(field), "values": values}
+
 
     def unify_data(self, field, data):
         if data == None:
-            return {"notion": field, "values": []}
+            return {"notion": field, "label": self.humanify_notion(field), "values": []}
         else:
             if "items" in data.keys():
                 return self.put_list_values(field, data)
             else:
                 values = []
                 values.append(self.get_value(data))
-                return {"notion": field, "values": values}
+                return {"notion": field, "label": self.humanify_notion(field), "values": values}
 
 
     def model_results(self, dataset, collection, result):
@@ -88,10 +98,21 @@ class Timbuctoo_handler:
             items.append(self.unify_data(field, result["data"]["dataSets"][dataset][collection][field]))
         return items
 
+    def rdf_label_as_title(self, title, items):
+        ret_title = title
+        for item in items:
+            if item["notion"] == "rdfs_label":
+                ret_title = item["values"][0]
+        return ret_title
+
     def get_item(self, dataset, collection, uri):
         query = self.build_query(dataset, collection, uri)
         result = self.fetch_data(query)
-        return self.model_results(dataset, collection, result)
+        items = self.model_results(dataset, collection, result)
+        tmp = items.pop(0);
+        title = tmp["values"][0]
+        title = self.rdf_label_as_title(title, items)
+        return {"title": title, "uri": uri, "items": items}
         #return json.dumps({"query": query})
 
 
