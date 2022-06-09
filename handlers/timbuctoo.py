@@ -1,5 +1,6 @@
 import requests
 import json
+import sys
 
 from queries import timbuctoo_queries, timbuctoo_fragments
 
@@ -22,6 +23,10 @@ class Timbuctoo_handler:
 
     def get_props(self, dataset, collection):
         query = self.tq.get_collection_properties(dataset, collection)
+        return self.fetch_data(query)
+
+    def get_prefixes(self, dataset):
+        query = self.tq.get_dataset_prefixes(dataset)
         return self.fetch_data(query)
 
 
@@ -65,7 +70,10 @@ class Timbuctoo_handler:
         if "uri" in item.keys():
             return item["title"]["value"]
         else:
-            return item["value"]
+            try:
+                return item["value"]
+            except:
+                return ""
 
     def humanify_notion(self, field):
         ret_value = field.replace("_inverse_", "")
@@ -80,22 +88,36 @@ class Timbuctoo_handler:
         return {"notion": field, "label": self.humanify_notion(field), "values": values}
 
 
-    def unify_data(self, field, data):
+    def unify_data(self, field, data, pref_list):
         if data == None:
             return {"notion": field, "label": self.humanify_notion(field), "values": []}
         else:
             if "items" in data.keys():
-                return self.put_list_values(field, data)
+                return self.extract_list(field, data)
             else:
                 values = []
                 values.append(self.get_value(data))
                 return {"notion": field, "label": self.humanify_notion(field), "values": values}
 
+    def extract_list(self, field, data):
+        if field == "rdf_typeList":
+            return self.put_rdf_type_list(field, data)
+        else:
+            return self.put_list_values(field, data)
 
-    def model_results(self, dataset, collection, result):
+    def put_rdf_type_list(self, field, data):
+        values = []
+        for item in data["items"]:
+            if "uri" in item.keys():
+                rdf_type = item["uri"].split("/")
+                if rdf_type[-1] not in values:
+                    values.append(rdf_type[-1])
+        return {"notion": field, "label": self.humanify_notion(field), "values": values}
+
+    def model_results(self, dataset, collection, result, list):
         items = []
         for field in result["data"]["dataSets"][dataset][collection]:
-            items.append(self.unify_data(field, result["data"]["dataSets"][dataset][collection][field]))
+            items.append(self.unify_data(field, result["data"]["dataSets"][dataset][collection][field], list))
         return items
 
     def rdf_label_as_title(self, title, items):
@@ -105,14 +127,23 @@ class Timbuctoo_handler:
                 ret_title = item["values"][0]
         return ret_title
 
+    def create_adressed_prefixes(self, dataset):
+        prefixes = self.get_prefixes(dataset)
+        prefixList = {}
+        for item in prefixes["data"]["dataSetMetadata"]["prefixMappings"]:
+            prefixList[item["uri"]] = item["prefix"]
+        return prefixList
+
+
     def get_item(self, dataset, collection, uri):
         query = self.build_query(dataset, collection, uri)
+        #print(query)
+        list = self.create_adressed_prefixes(dataset)
         result = self.fetch_data(query)
-        items = self.model_results(dataset, collection, result)
+        items = self.model_results(dataset, collection, result, list)
         tmp = items.pop(0);
         title = tmp["values"][0]
         title = self.rdf_label_as_title(title, items)
         return {"title": title, "uri": uri, "items": items}
-        #return json.dumps({"query": query})
 
 

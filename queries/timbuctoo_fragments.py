@@ -6,10 +6,10 @@ class Timbuctoo_fragments:
         return " " + field + " {items {value}} "
 
     def entity(self, field):
-        return " " + field + " {... on Entity {uri title {value}}} "
+        return " " + field + " {... on Entity {uri title {value type __typename} __typename}} "
 
     def entity_list(self, field):
-        return " " + field + " {items { ... on Entity {uri title {value}}}} "
+        return " " + field + " {items { ... on Entity {uri title {value type __typename} __typename}}} "
 
     def uri_title_value(self, field):
         return " " + field + " { uri title {value}} "

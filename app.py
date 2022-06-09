@@ -30,6 +30,7 @@ def hello_world():
     retStruc = {"app": "Procrustus service", "version": "0.1"}
     return json.dumps(retStruc)
 
+
 @app.route("/facet", methods=['GET'])
 def get_facet():
     facet = request.args.get("name")
@@ -71,6 +72,11 @@ def get_properties(ds, coll):
 def get_item():
     params = request.get_json()
     result = tb.get_item(params["dataset"], params["collection"], params["uri"])
+    return json.dumps(result)
+
+@app.route("/get_prefixes/<ds>")
+def get_prefixes(ds):
+    result = tb.get_prefixes(ds)
     return json.dumps(result)
 
 
