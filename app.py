@@ -49,7 +49,7 @@ def get_filter_facet():
 @app.route("/browse", methods=['POST'])
 def browse():
     struc = request.get_json()
-    ret_struc = index.browse(struc["page"], struc["page_length"], struc["sortorder"] + ".keyword", struc["searchvalues"], struc["index"])
+    ret_struc = index.browse(struc["page"], struc["page_length"], struc["sortorder"] + ".keyword", struc["searchvalues"], struc["collection_index"])
     return json.dumps(ret_struc)
 
 @app.route("/get_store")
