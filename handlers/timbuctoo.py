@@ -9,6 +9,9 @@ class Timbuctoo_handler:
         self.server = "https://repository.goldenagents.org/v5/graphql"
         self.tq = timbuctoo_queries.Timbuctoo_queries()
         self.tf = timbuctoo_fragments.Timbuctoo_fragments()
+        self.normalized_props = {}
+        self.unique_props = {'title': {'shortendedUri': 'title'}}
+
 
 
     def fetch_data(self, query):
@@ -62,9 +65,14 @@ class Timbuctoo_handler:
 
     def build_query(self, dataset, collection, uri):
         props = self.get_props(dataset, collection)
+        self.normalize_props(props)
         values = self.value_extractor(props)
         query = self.tf.get_item(dataset, collection, uri, values)
         return query
+
+    def normalize_props(self, props):
+        for item in props["data"]["dataSetMetadata"]["collection"]["properties"]["items"]:
+            self.normalized_props[item["name"]] = item
 
     def get_value(self, item):
         if "uri" in item.keys():
@@ -76,10 +84,22 @@ class Timbuctoo_handler:
                 return ""
 
     def humanify_notion(self, field):
-        ret_value = field.replace("_inverse_", "")
-        ret_value = ret_value.replace("List", "")
-        ret_value = ret_value.replace("schema_", "")
-        return ret_value
+        #ret_value = field.replace("_inverse_", "")
+        #ret_value = ret_value.replace("List", "")
+        #ret_value = ret_value.replace("schema_", "")
+        if field != 'title':
+            if self.normalized_props[field]["shortenedUri"]:
+                label = self.normalized_props[field]["shortenedUri"]
+            else:
+                label = field
+
+            labelTruncs = label.split(':')
+            if labelTruncs[-1]:
+                return labelTruncs[-1]
+            else:
+                return label
+        else:
+            return field
 
     def put_list_values(self, field, data):
         values = []
@@ -88,7 +108,7 @@ class Timbuctoo_handler:
         return {"notion": field, "label": self.humanify_notion(field), "values": values}
 
 
-    def unify_data(self, field, data, pref_list):
+    def unify_data(self, field, data, pref_list, human = True):
         if data == None:
             return {"notion": field, "label": self.humanify_notion(field), "values": []}
         else:
@@ -96,8 +116,19 @@ class Timbuctoo_handler:
                 return self.extract_list(field, data)
             else:
                 values = []
-                values.append(self.get_value(data))
+                if field == "rdf_type" and human:
+                    rtype = self.humanize_rdf_type(self.get_value(data))
+                    values.append(rtype)
+                else:
+                    values.append(self.get_value(data))
                 return {"notion": field, "label": self.humanify_notion(field), "values": values}
+
+    def humanize_rdf_type(self, value):
+        type = value.split("/");
+        if type[-1]:
+            return type[-1]
+        else:
+            return ""
 
     def extract_list(self, field, data):
         if field == "rdf_typeList":
@@ -120,6 +151,15 @@ class Timbuctoo_handler:
             items.append(self.unify_data(field, result["data"]["dataSets"][dataset][collection][field], list))
         return items
 
+    def undouble_items(self, list):
+        labels = []
+        retList = []
+        for item in list:
+            if item["label"] not in labels:
+                labels.append(item["label"])
+                retList.append(item)
+        return retList
+
     def rdf_label_as_title(self, title, items):
         ret_title = title
         for item in items:
@@ -134,6 +174,26 @@ class Timbuctoo_handler:
             prefixList[item["uri"]] = item["prefix"]
         return prefixList
 
+    def strip_prefixes(self, dataset, list):
+        prefixes = self.get_prefixes(dataset)
+        for item in list:
+            if item["values"]:
+                for i in range(len(item["values"])):
+                    value = self.check_prefixes(item["values"][i], prefixes)
+                    if value != item["values"][i]:
+                        item["values"][i] = value
+
+    def check_prefixes(self, val, prefixes):
+        retval = val
+        if "http://" in val or "https://" in val:
+            for prefix in prefixes["data"]["dataSetMetadata"]["prefixMappings"]:
+                if val.startswith(prefix["uri"]):
+                    print('Bingo')
+                    print(val)
+                    retval = val.replace(prefix["uri"], "")
+                    print(retval)
+        return retval
+
 
     def get_item(self, dataset, collection, uri):
         query = self.build_query(dataset, collection, uri)
@@ -141,6 +201,18 @@ class Timbuctoo_handler:
         list = self.create_adressed_prefixes(dataset)
         result = self.fetch_data(query)
         items = self.model_results(dataset, collection, result, list)
+        tmp = items.pop(0);
+        title = tmp["values"][0]
+        title = self.rdf_label_as_title(title, items)
+        return {"title": title, "uri": uri, "items": items}
+
+    def get_human_item(self, dataset, collection, uri):
+        query = self.build_query(dataset, collection, uri)
+        list = self.create_adressed_prefixes(dataset)
+        result = self.fetch_data(query)
+        items = self.model_results(dataset, collection, result, list)
+        items = self.undouble_items(items)
+        self.strip_prefixes(dataset, items)
         tmp = items.pop(0);
         title = tmp["values"][0]
         title = self.rdf_label_as_title(title, items)

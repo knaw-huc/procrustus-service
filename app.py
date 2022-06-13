@@ -74,6 +74,12 @@ def get_item():
     result = tb.get_item(params["dataset"], params["collection"], params["uri"])
     return json.dumps(result)
 
+@app.route("/get_human_item", methods=["POST"])
+def get_human_item():
+    params = request.get_json()
+    result = tb.get_human_item(params["dataset"], params["collection"], params["uri"])
+    return json.dumps(result)
+
 @app.route("/get_prefixes/<ds>")
 def get_prefixes(ds):
     result = tb.get_prefixes(ds)
