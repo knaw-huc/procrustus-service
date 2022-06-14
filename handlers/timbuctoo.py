@@ -1,6 +1,7 @@
 import requests
 import json
 import sys
+import base64
 
 from queries import timbuctoo_queries, timbuctoo_fragments
 
@@ -104,9 +105,29 @@ class Timbuctoo_handler:
     def put_list_values(self, field, data):
         values = []
         for item in data["items"]:
-            values.append(self.get_value(item))
+            if "__typename" in item.keys():
+                linked_collection = self.get_link(field, item["__typename"])
+                if linked_collection != "":
+                    params = {
+                        "dataset": self.dataset,
+                        "collection": linked_collection,
+                        "uri": item["uri"]
+                    }
+
+                    values.append({"value": self.get_value(item), "link": params})
+                else:
+                    values.append({"value": self.get_value(item)})
+            else:
+                values.append({"value": self.get_value(item)})
         return {"notion": field, "label": self.humanify_notion(field), "values": values}
 
+
+    def get_link(self, field, type_name):
+        for col in self.normalized_props[field]["referencedCollections"]["items"]:
+           if col != "tim_unknown":
+               if col in type_name:
+                   return col
+        return ""
 
     def unify_data(self, field, data, pref_list, human = True):
         if data == None:
@@ -118,10 +139,27 @@ class Timbuctoo_handler:
                 values = []
                 if field == "rdf_type" and human:
                     rtype = self.humanize_rdf_type(self.get_value(data))
-                    values.append(rtype)
+                    values.append({"value": rtype})
                 else:
-                    values.append(self.get_value(data))
+                    linked_collection = self.get_value_link(field, data)
+                    if linked_collection != "":
+                        params = {
+                            "dataset": self.dataset,
+                            "collection": linked_collection,
+                            "uri": data["uri"]
+                        }
+                        values.append({"value": self.get_value(data), "link": params})
+                    else:
+                        values.append({"value": self.get_value(data)})
                 return {"notion": field, "label": self.humanify_notion(field), "values": values}
+
+
+    def get_value_link(self, field, data):
+        retVal = ""
+        if field != 'title' and field != 'uri':
+            if "__typename" in data.keys():
+                retVal = self.get_link(field, data["__typename"])
+        return retVal
 
     def humanize_rdf_type(self, value):
         type = value.split("/");
@@ -141,8 +179,9 @@ class Timbuctoo_handler:
         for item in data["items"]:
             if "uri" in item.keys():
                 rdf_type = item["uri"].split("/")
-                if rdf_type[-1] not in values:
-                    values.append(rdf_type[-1])
+                obj = {"value": rdf_type[-1]}
+                if obj not in values:
+                    values.append({"value": rdf_type[-1]})
         return {"notion": field, "label": self.humanify_notion(field), "values": values}
 
     def model_results(self, dataset, collection, result, list):
@@ -161,10 +200,15 @@ class Timbuctoo_handler:
         return retList
 
     def rdf_label_as_title(self, title, items):
-        ret_title = title
+
+        if type(title) == str:
+            ret_title = title
+        else:
+            ret_title = title["value"]
+
         for item in items:
             if item["notion"] == "rdfs_label":
-                ret_title = item["values"][0]
+                ret_title = item["values"][0]["value"]
         return ret_title
 
     def create_adressed_prefixes(self, dataset):
@@ -179,25 +223,23 @@ class Timbuctoo_handler:
         for item in list:
             if item["values"]:
                 for i in range(len(item["values"])):
-                    value = self.check_prefixes(item["values"][i], prefixes)
-                    if value != item["values"][i]:
-                        item["values"][i] = value
+                    value = self.check_prefixes(item["values"][i]["value"], prefixes)
+                    if value != item["values"][i]["value"]:
+                        item["values"][i]["value"] = value
 
     def check_prefixes(self, val, prefixes):
         retval = val
         if "http://" in val or "https://" in val:
             for prefix in prefixes["data"]["dataSetMetadata"]["prefixMappings"]:
                 if val.startswith(prefix["uri"]):
-                    print('Bingo')
-                    print(val)
                     retval = val.replace(prefix["uri"], "")
-                    print(retval)
         return retval
 
 
     def get_item(self, dataset, collection, uri):
+        self.dataset = dataset
+        self.collection = collection
         query = self.build_query(dataset, collection, uri)
-        #print(query)
         list = self.create_adressed_prefixes(dataset)
         result = self.fetch_data(query)
         items = self.model_results(dataset, collection, result, list)
@@ -207,6 +249,8 @@ class Timbuctoo_handler:
         return {"title": title, "uri": uri, "items": items}
 
     def get_human_item(self, dataset, collection, uri):
+        self.dataset = dataset
+        self.collection = collection
         query = self.build_query(dataset, collection, uri)
         list = self.create_adressed_prefixes(dataset)
         result = self.fetch_data(query)

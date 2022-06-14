@@ -108,6 +108,7 @@ class Index:
                         matches.append({"multi_match": {"query": value, "fields": ["*"]}})
                     else:
                         matches.append({"match": {item["field"] + ".keyword": value}})
+
             response = self.client.search(
                 index=index,
                 body={ "query": {
