@@ -1,8 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 from elastic_index import Index
 from store import Store
 from handlers import timbuctoo
+import requests
 
 
 app = Flask(__name__)
@@ -86,6 +87,19 @@ def get_prefixes(ds):
     result = tb.get_prefixes(ds)
     return json.dumps(result)
 
+@app.get('/typeinfo')
+def typeinfo():
+    if not request.values.get('url'):
+        return 'No url specified', 400
+
+    url = request.values.get('url')
+    try:
+        res = requests.head(url, allow_redirects=True)
+        return jsonify(ok=res.ok,
+                       url=url,
+                       content_type=res.headers['content-type'] if res.ok else None)
+    except:
+        return jsonify(ok=False, url=url, content_type=None)
 
 #Start main program
 

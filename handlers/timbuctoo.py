@@ -94,11 +94,16 @@ class Timbuctoo_handler:
             else:
                 label = field
 
-            labelTruncs = label.split(':')
-            if labelTruncs[-1]:
+
+            if ":" in label and "http" not in label:
+                labelTruncs = label.split(':')
                 return labelTruncs[-1]
             else:
-                return label
+                if "#" in label:
+                    labelTruncs = label.split("#")
+                    return labelTruncs[-1]
+                else:
+                    return label
         else:
             return field
 
@@ -113,10 +118,18 @@ class Timbuctoo_handler:
                         "collection": linked_collection,
                         "uri": item["uri"]
                     }
-
                     values.append({"value": self.get_value(item), "link": params})
                 else:
-                    values.append({"value": self.get_value(item)})
+                    val = self.get_value(item)
+                    if val.startswith("http"):
+                        params = {
+                            "dataset": "extern",
+                            "collection": "",
+                            "uri": val
+                        }
+                        values.append({"value": self.get_value(item), "link": params})
+                    else:
+                        values.append({"value": self.get_value(item)})
             else:
                 values.append({"value": self.get_value(item)})
         return {"notion": field, "label": self.humanify_notion(field), "values": values}
@@ -252,10 +265,12 @@ class Timbuctoo_handler:
         self.dataset = dataset
         self.collection = collection
         query = self.build_query(dataset, collection, uri)
+        #print(query)
         list = self.create_adressed_prefixes(dataset)
         result = self.fetch_data(query)
         items = self.model_results(dataset, collection, result, list)
-        items = self.undouble_items(items)
+        if collection != "schema_Role":
+            items = self.undouble_items(items)
         self.strip_prefixes(dataset, items)
         tmp = items.pop(0);
         title = tmp["values"][0]
