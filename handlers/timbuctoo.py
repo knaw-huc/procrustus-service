@@ -65,6 +65,7 @@ class Timbuctoo_handler:
 
 
     def build_query(self, dataset, collection, uri):
+        print(collection)
         props = self.get_props(dataset, collection)
         self.normalize_props(props)
         values = self.value_extractor(props)
@@ -72,6 +73,9 @@ class Timbuctoo_handler:
         return query
 
     def normalize_props(self, props):
+        # print("<props>")
+        # print(props)
+        # print("</props>")
         for item in props["data"]["dataSetMetadata"]["collection"]["properties"]["items"]:
             self.normalized_props[item["name"]] = item
 
@@ -85,6 +89,7 @@ class Timbuctoo_handler:
                 return ""
 
     def humanify_notion(self, field):
+        retValue = ""
         #ret_value = field.replace("_inverse_", "")
         #ret_value = ret_value.replace("List", "")
         #ret_value = ret_value.replace("schema_", "")
@@ -97,13 +102,20 @@ class Timbuctoo_handler:
 
             if ":" in label and "http" not in label:
                 labelTruncs = label.split(':')
-                return labelTruncs[-1]
+                retValue = labelTruncs[-1]
             else:
                 if "#" in label:
                     labelTruncs = label.split("#")
-                    return labelTruncs[-1]
+                    retValue = labelTruncs[-1]
                 else:
-                    return label
+                    retValue = label
+        else:
+            retValue = field
+        return retValue
+
+    def get_field_uri(self, field):
+        if field != 'title':
+            return self.normalized_props[field]["uri"]
         else:
             return field
 
@@ -132,7 +144,7 @@ class Timbuctoo_handler:
                         values.append({"value": self.get_value(item)})
             else:
                 values.append({"value": self.get_value(item)})
-        return {"notion": field, "label": self.humanify_notion(field), "values": values}
+        return {"notion": field.replace("List", ""), "label": self.humanify_notion(field), "uri": self.get_field_uri(field), "values": values, "type": "human"}
 
 
     def get_link(self, field, type_name):
@@ -144,7 +156,7 @@ class Timbuctoo_handler:
 
     def unify_data(self, field, data, pref_list, human = True):
         if data == None:
-            return {"notion": field, "label": self.humanify_notion(field), "values": []}
+            return {"notion": field, "label": self.humanify_notion(field), "uri": self.get_field_uri(field), "values": [], "type": "human"}
         else:
             if "items" in data.keys():
                 return self.extract_list(field, data)
@@ -164,7 +176,7 @@ class Timbuctoo_handler:
                         values.append({"value": self.get_value(data), "link": params})
                     else:
                         values.append({"value": self.get_value(data)})
-                return {"notion": field, "label": self.humanify_notion(field), "values": values}
+                return {"notion": field, "label": self.humanify_notion(field), "uri": self.get_field_uri(field), "values": values, "type": "human"}
 
 
     def get_value_link(self, field, data):
@@ -195,7 +207,7 @@ class Timbuctoo_handler:
                 obj = {"value": rdf_type[-1]}
                 if obj not in values:
                     values.append({"value": rdf_type[-1]})
-        return {"notion": field, "label": self.humanify_notion(field), "values": values}
+        return {"notion": field.replace("List", ""), "label": self.humanify_notion(field), "uri": self.get_field_uri(field), "values": values, "type": "human"}
 
     def model_results(self, dataset, collection, result, list):
         items = []
@@ -209,7 +221,9 @@ class Timbuctoo_handler:
         for item in list:
             if item["label"] not in labels:
                 labels.append(item["label"])
-                retList.append(item)
+            else:
+                item["type"] = "rdf"
+            retList.append(item)
         return retList
 
     def rdf_label_as_title(self, title, items):
@@ -265,9 +279,9 @@ class Timbuctoo_handler:
         self.dataset = dataset
         self.collection = collection
         query = self.build_query(dataset, collection, uri)
-        #print(query)
         list = self.create_adressed_prefixes(dataset)
         result = self.fetch_data(query)
+        print(query)
         items = self.model_results(dataset, collection, result, list)
         if collection != "schema_Role":
             items = self.undouble_items(items)

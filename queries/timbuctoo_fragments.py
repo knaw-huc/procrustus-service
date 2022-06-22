@@ -6,7 +6,10 @@ class Timbuctoo_fragments:
         return " " + field + " {items {... on Value {value}}} "
 
     def entity(self, field):
-        return " " + field + " {... on Entity {uri title { ... on Value {value type __typename}} __typename}} "
+        #if "inverse_" in field:
+            return " " + field + " {... on Entity {uri title { ... on Value {value type __typename}} __typename}} "
+        #else:
+        #    return " " + field + " {... on Entity {uri title { ... on Value {value type __typename}} __typename} ... on Value {value type}} "
 
     def entity_list(self, field):
         return " " + field + " {items { ... on Entity {uri title { ... on Value {value type __typename}} __typename}}} "
