@@ -1,8 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 from elastic_index import Index
 from store import Store
 from handlers import timbuctoo
+import requests
 
 
 app = Flask(__name__)
@@ -49,7 +50,7 @@ def get_filter_facet():
 @app.route("/browse", methods=['POST'])
 def browse():
     struc = request.get_json()
-    ret_struc = index.browse(struc["page"], struc["page_length"], struc["sortorder"] + ".keyword", struc["searchvalues"], struc["index"])
+    ret_struc = index.browse(struc["page"], struc["page_length"], struc["sortorder"] + ".keyword", struc["searchvalues"], struc["collection_index"])
     return json.dumps(ret_struc)
 
 @app.route("/get_store")
@@ -74,10 +75,33 @@ def get_item():
     result = tb.get_item(params["dataset"], params["collection"], params["uri"])
     return json.dumps(result)
 
+
+@app.route("/get_human_item", methods=["POST"])
+def get_human_item():
+    params = request.get_json()
+    result = tb.get_human_item(params["dataset"], params["collection"], params["uri"])
+    return json.dumps(result)
+
+
 @app.route("/get_prefixes/<ds>")
 def get_prefixes(ds):
     result = tb.get_prefixes(ds)
     return json.dumps(result)
+
+
+@app.get('/typeinfo')
+def typeinfo():
+    if not request.values.get('url'):
+        return 'No url specified', 400
+
+    url = request.values.get('url')
+    try:
+        res = requests.head(url, allow_redirects=True)
+        return jsonify(ok=res.ok,
+                       url=url,
+                       content_type=res.headers['content-type'] if res.ok else None)
+    except:
+        return jsonify(ok=False, url=url, content_type=None)
 
 
 #Start main program
