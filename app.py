@@ -11,7 +11,7 @@ app = Flask(__name__)
 config = {
     "url" : "localhost",
     "port" : "9200",
-    "doc_type" : "ecodices"
+    "doc_type" : "diplo"
 }
 
 index = Index(config)

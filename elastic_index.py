@@ -21,7 +21,7 @@ class Index:
     def get_facet(self, field, amount):
         ret_array = []
         response = self.client.search(
-            index="manuscripts",
+            index="diplo",
             body=
                 {
                     "size": 0,
@@ -54,7 +54,7 @@ class Index:
         print(facet_filter)
         ret_array = []
         response = self.client.search(
-            index="manuscripts",
+            index="diplo",
             body=
             {
                 "query": {
