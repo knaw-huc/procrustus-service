@@ -69,6 +69,11 @@ def get_properties(ds, coll):
     result = tb.get_props(ds, coll)
     return json.dumps(result)
 
+@app.route("/get_compact_collection_properties/<ds>/<coll>")
+def get_compact_properties(ds, coll):
+    result = tb.get_compact_props(ds, coll)
+    return json.dumps(result)
+
 @app.route("/get_item", methods=["POST"])
 def get_item():
     params = request.get_json()

@@ -22,12 +22,37 @@ class Timbuctoo_handler:
         return json.loads(results.text)
 
     def get_colls(self, dataset):
+        ret_struc = {}
         query = self.tq.get_collections(dataset)
-        return self.fetch_data(query)
+        result = self.fetch_data(query)
+        ret_struc["dataSetId"] = result["data"]["dataSetMetadata"]["dataSetId"]
+        ret_struc["dataSetName"] = result["data"]["dataSetMetadata"]["dataSetName"]
+        ret_struc["items"] =  result["data"]["dataSetMetadata"]["collectionList"]["items"]
+        return ret_struc
+
 
     def get_props(self, dataset, collection):
         query = self.tq.get_collection_properties(dataset, collection)
         return self.fetch_data(query)
+
+    def get_compact_props(self, dataset, collection):
+        ret_struc = {}
+        query = self.tq.get_collection_properties(dataset, collection)
+        result = self.fetch_data(query)
+        ret_struc["uri"] = result["data"]["dataSetMetadata"]["collection"]["uri"]
+        ret_struc["shortenedUri"] = result["data"]["dataSetMetadata"]["collection"]["shortenedUri"]
+        ret_struc["properties"] = self.get_properties(result["data"]["dataSetMetadata"]["collection"]["properties"]["items"])
+        return ret_struc
+
+    def get_properties(self, list):
+        ret_list = []
+        for item in list:
+            buffer = {}
+            buffer["uri"] = item["uri"]
+            buffer["shortenedUri"] = item["shortenedUri"]
+            buffer["density"] = item["density"]
+            ret_list.append(buffer)
+        return ret_list
 
     def get_prefixes(self, dataset):
         query = self.tq.get_dataset_prefixes(dataset)

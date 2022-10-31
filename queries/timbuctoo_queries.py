@@ -9,7 +9,7 @@ class Timbuctoo_queries:
             return '{dataSets {' + dataset_id + ' {' + collection_id +  '(cursor: "' + cursor + '" count: ' + count + ') {total prevCursor nextCursor items {uri title {value}}}}}}'
 
     def get_collection_properties(self, dataset_id, collection):
-        return '{dataSetMetadata(dataSetId: "' + dataset_id + '") {collection(collectionId: "' + collection + '") {uri shortenedUri title {value} properties {items { uri name  shortenedUri isList isValueType isInverse  referencedCollections {items}}}}}}'
+        return '{dataSetMetadata(dataSetId: "' + dataset_id + '") {collection(collectionId: "' + collection + '") {uri shortenedUri title {value} properties {items { uri name shortenedUri isList isValueType isInverse density referencedCollections {items}}}}}}'
 
     def get_dataset_prefixes(selfself, dataset_id):
         return '{dataSetMetadata(dataSetId: "' + dataset_id + '") { prefixMappings {prefix uri}}}'
