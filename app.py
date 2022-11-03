@@ -3,6 +3,7 @@ import json
 from elastic_index import Index
 from store import Store
 from handlers import timbuctoo
+from misc import metadata
 import requests
 
 
@@ -58,10 +59,15 @@ def get_store():
     store = Store()
     return store.get_data()
 
+@app.route("/get_metadata/<md>")
+def get_metadata(md):
+    store = metadata.MetaData()
+    return store.get_metadata(md)
+
 @app.route("/get_entities/<ds>", methods=["GET"])
 def get_entities(ds):
     result = tb.get_colls(ds)
-    query = {"query": result}
+    #query = {"query": result}
     return json.dumps(result)
 
 @app.route("/get_collection_properties/<ds>/<coll>")
