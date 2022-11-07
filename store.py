@@ -161,4 +161,4 @@ class Store:
                 ]
             }
         ]}
-        return json.dumps(store)
+        return store

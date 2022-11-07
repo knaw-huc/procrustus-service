@@ -11,5 +11,8 @@ class Timbuctoo_queries:
     def get_collection_properties(self, dataset_id, collection):
         return '{dataSetMetadata(dataSetId: "' + dataset_id + '") {collection(collectionId: "' + collection + '") {uri shortenedUri title {value} properties {items { uri name shortenedUri isList isValueType isInverse density referencedCollections {items}}}}}}'
 
-    def get_dataset_prefixes(selfself, dataset_id):
+    def get_dataset_prefixes(self, dataset_id):
         return '{dataSetMetadata(dataSetId: "' + dataset_id + '") { prefixMappings {prefix uri}}}'
+
+    def get_metadata(self, dataset_id):
+        return '{dataSets {' + dataset_id + ' {metadata {title {value} description {value} imageUrl {value } license {uri} publisher {value} creator {value} contributor {value} dataProvider {value} subject {value} source {value} created {value} modified {value} sparqlEndpoint {uri}}}}}'

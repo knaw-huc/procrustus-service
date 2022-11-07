@@ -58,6 +58,34 @@ class Timbuctoo_handler:
         query = self.tq.get_dataset_prefixes(dataset)
         return self.fetch_data(query)
 
+    def get_metadata(self, dataset):
+        query = self.tq.get_metadata(dataset)
+        result = self.fetch_data(query)
+        result = self.simplify_metadata(result["data"]["dataSets"][dataset]["metadata"])
+        result["description"] = result["description"].split('\n')
+        return result
+
+    def get_all_metadata(self, store):
+        retList = []
+        for item in store["dataSets"]:
+            print(item["dataSet"])
+            md = self.get_metadata(item["dataSet"])
+            print(md)
+            retList.append({"dataset": item["dataSet"], "metadata": md})
+        return retList
+
+
+    def simplify_metadata(self, md):
+        retDict = {}
+        for key in md.keys():
+            if md[key]:
+                if key == 'license' or key == "sparqlEndpoint":
+                    retDict[key] = md[key]["uri"]
+                else:
+                    retDict[key] = md[key]["value"]
+            else:
+                retDict[key] = ""
+        return retDict
 
 
     def create_field_query(self, item):

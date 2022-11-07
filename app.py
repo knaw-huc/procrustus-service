@@ -57,12 +57,22 @@ def browse():
 @app.route("/get_store")
 def get_store():
     store = Store()
-    return store.get_data()
+    return json.dumps(store.get_data())
+
+@app.route("/get_metadata_store/<md>")
+def get_metadata_store(md):
+    store = metadata.MetaData()
+    return store.get_metadata(md)
 
 @app.route("/get_metadata/<md>")
 def get_metadata(md):
-    store = metadata.MetaData()
-    return store.get_metadata(md)
+    if md == 'all':
+        store = Store()
+        data = store.get_data()
+        result = tb.get_all_metadata(data)
+    else:
+        result = tb.get_metadata(md)
+    return json.dumps(result)
 
 @app.route("/get_entities/<ds>", methods=["GET"])
 def get_entities(ds):
