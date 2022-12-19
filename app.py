@@ -67,9 +67,11 @@ def get_metadata_store(md):
 @app.route("/get_metadata/<md>")
 def get_metadata(md):
     if md == 'all':
-        store = Store()
-        data = store.get_data()
-        result = tb.get_all_metadata(data)
+        #store = Store()
+        #data = store.get_data()
+        #result = tb.get_all_metadata(data)
+        store = metadata.MetaData()
+        result = store.send_metadata_list()
     else:
         result = tb.get_metadata(md)
     return json.dumps(result)

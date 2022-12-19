@@ -28,6 +28,9 @@ class Timbuctoo_handler:
         ret_struc["dataSetId"] = result["data"]["dataSetMetadata"]["dataSetId"]
         ret_struc["dataSetName"] = result["data"]["dataSetMetadata"]["dataSetName"]
         ret_struc["items"] =  result["data"]["dataSetMetadata"]["collectionList"]["items"]
+        for item in ret_struc["items"]:
+            if item["title"]:
+                item["title"] = item["title"]["value"]
         return ret_struc
 
 

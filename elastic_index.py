@@ -97,7 +97,7 @@ class Index:
                     "from": start,
                     "_source": ["uri", "title"],
                     "sort": [
-                        { orderFieldName: {"order":"asc"}}
+                        { "title.keyword": {"order":"asc"}}
                     ]
                 }
             )
@@ -123,7 +123,6 @@ class Index:
                     ]
                 }
             )
-
         ret_array = {"amount" : response["hits"]["total"]["value"], "pages": math.ceil(response["hits"]["total"]["value"] / length) ,"items": []}
         for item in response["hits"]["hits"]:
             ret_array["items"].append(item["_source"])
