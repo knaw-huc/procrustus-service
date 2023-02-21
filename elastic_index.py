@@ -51,7 +51,6 @@ class Index:
         return ret_array
 
     def get_filter_facet(self, field, amount, facet_filter):
-        print(facet_filter)
         ret_array = []
         response = self.client.search(
             index="diplo",
