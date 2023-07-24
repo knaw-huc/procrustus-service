@@ -1,4 +1,5 @@
 import json
+from store import Store
 
 from elasticsearch import Elasticsearch
 import math
@@ -18,67 +19,43 @@ class Index:
         return ret_str + ".*"
 
 
-    def get_facet(self, field, amount):
-        ret_array = []
+    def get_switch(self, uri):
         response = self.client.search(
-            index="diplo",
-            body=
-                {
-                    "size": 0,
-                    "aggs": {
-                        "names": {
-                            "terms": {
-                                "field": field,
-                                "size": amount,
-                                "order": {
-                                    "_count": "desc"
-                                }
-                            },
-                            "aggs": {
-                                "byHash": {
-                                    "terms": {
-                                        "field": "hash"
-                                    }
-                                }
-                            }
-                        }
+            index='*',
+            body ={
+                "query": {
+                    "match": {
+                        "uri.keyword": uri
                     }
-                }
+                },
+                "_source": ["uri", "title"]
+            }
         )
-        for hits in response["aggregations"]["names"]["buckets"]:
-            buffer = {"key": hits["key"], "doc_count": hits["doc_count"]}
+        ret_array = []
+        for hit in response["hits"]["hits"]:
+            buffer = {}
+            buffer["index"] = hit["_index"]
+            buffer["title"] = hit["_source"]["title"]
+            buffer["uri"] = hit["_source"]["uri"]
+            buffer["tb"] = self.get_labels(hit["_index"])
             ret_array.append(buffer)
         return ret_array
 
-    def get_filter_facet(self, field, amount, facet_filter):
-        ret_array = []
-        response = self.client.search(
-            index="diplo",
-            body=
-            {
-                "query": {
-                    "regexp": {
-                        field : self.no_case(facet_filter)
+    def get_labels(self, indexName):
+        store = Store()
+        data = store.get_data()
+        for ds in data["dataSets"]:
+            for coll in ds["indexes"]:
+                if coll["collection"] == indexName:
+                    return {
+                        "dataSet": ds["dataSet"],
+                        "label": ds["label"],
+                        "index": coll
                     }
-                },
-                "size": 0,
-                "aggs": {
-                    "names": {
-                        "terms": {
-                            "field": field,
-                            "size": amount,
-                            "order": {
-                                "_count": "desc"
-                            }
-                        }
-                    }
-                }
-            }
-        )
-        for hits in response["aggregations"]["names"]["buckets"]:
-            buffer = {"key": hits["key"], "doc_count": hits["doc_count"]}
-            ret_array.append(buffer)
-        return ret_array
+        return {}
+
+
+
 
 
 

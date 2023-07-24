@@ -364,5 +364,60 @@ class MetaData:
                     "modified": "2022-04-29",
                     "sparqlEndpoint": "https://sparql2.goldenagents.org/stcn"
                 }
+            },
+            {
+                "dataset": "u692bc364e9d7fa97b3510c6c0c8f2bb9a0e5123b__htr",
+                "metadata" : {
+                    "title": "Golden Agents HTR - Amsterdam City Archives",
+                    "description": [
+                        "This dataset contains the Named Entity Recognition output done on the HTR from the Amsterdam City Archives. For deeds of type Probate Inventory, Last Will and Prenuptial Agreement the Analiticcl tool (https://github.com/proycon/analiticcl) was run on the material. The result is modelled as Web Annotations that point to a specific scan from the archive.  ",
+                        "",
+                        "For more information, see: https://github.com/knaw-huc/golden-agents-htr",
+                        "",
+                        ""
+                    ],
+                    "imageUrl": "",
+                    "license": "https://creativecommons.org/licenses/by/4.0/",
+                    "publisher": "Golden Agents project",
+                    "creator": "Golden Agents project",
+                    "contributor": "",
+                    "dataProvider": "Amsterdam City Archives",
+                    "subject": "probate inventories",
+                    "source": "https://github.com/knaw-huc/golden-agents-htr",
+                    "created": "2022-10-21",
+                    "modified": "2022-10-21",
+                    "sparqlEndpoint": "https://sparql2.goldenagents.org/saa"
+                }
+            },
+            {
+                "dataset": "u692bc364e9d7fa97b3510c6c0c8f2bb9a0e5123b__poc",
+                "metadata": {
+                    "title": "Processes of Creativity",
+                    "description": [
+                        "Data of the 'Processes of Creativity' case study. ",
+                        "",
+                        "We can observe a 'rise' of or 'renewed interest' in the illustrated book in the second half of 17th century and the beginning of the 18th century. New genres and techniques and an increasing competition in the book market lead to new collaborations between authors, printers, and illustrators. It would be interesting to track these producers who collaborated on illustrated book projects and trace whether these commercial collaborations were grounded or resulted in social and/or religious interactions. For this, we are bringing together several datasets in the Golden Agents infrastructure that each contain information on the production of books, or on social relations between actors involved in the production process.",
+                        "",
+                        "Aim of case study:",
+                        "",
+                        "Linking & querying different datasets to find overarching patterns on creative industries in the Dutch Republic",
+                        "Overarching Research Question:",
+                        "",
+                        "How can we map innovation in cultural production?",
+                        "What is the relation between different sorts (bonding & bridging) of creative and social interactions?"
+                    ],
+                    "imageUrl": "",
+                    "license": "https://creativecommons.org/licenses/by/4.0/",
+                    "publisher": "Golden Agents project",
+                    "creator": "Golden Agents project",
+                    "contributor": "Iman Hashemi",
+                    "dataProvider": "Rijksmuseum Library, ECARTICO, Ja, ik wil!, STCN",
+                    "subject": "Illustrated books",
+                    "source": "https://github.com/knaw-huc/golden-agents-processes-of-creativity/",
+                    "created": "2021-08-25",
+                    "modified": "2022-11-07",
+                    "sparqlEndpoint": "http://sparqladmin2.goldenagents.org/repositories/poc"
+                }
             }
+
         ]

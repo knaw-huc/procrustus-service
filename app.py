@@ -111,6 +111,14 @@ def get_prefixes(ds):
     result = tb.get_prefixes(ds)
     return json.dumps(result)
 
+@app.route("/get_switch", methods=["GET"])
+def switch():
+    if not request.values.get('uri'):
+        return "No uri specified", 400
+    else:
+        result = index.get_switch(request.values.get('uri'));
+        return json.dumps(result);
+
 
 @app.get('/typeinfo')
 def typeinfo():
